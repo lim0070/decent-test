@@ -61,6 +61,7 @@
                 statusDiv.innerHTML = 'Sending...';
                 const response = await fetch('https://hr5h2rtjl0.execute-api.us-east-1.amazonaws.com/prod', {
                     method: 'POST',
+                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json'
                     },
