@@ -16,52 +16,70 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('uploadForm');
-        const fileInput = document.getElementById('fileUpload');
-        const uploadStatus = document.getElementById('uploadStatus');
+    const form = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileUpload');
+    const uploadStatus = document.getElementById('uploadStatus');
 
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-            if (!fileInput.files.length) {
-                uploadStatus.textContent = 'Please select a file to upload.';
-                return;
-            }
+        if (!fileInput.files.length) {
+            uploadStatus.textContent = 'Please select a file to upload.';
+            return;
+        }
 
-            const file = fileInput.files[0];
-            
-            // Use your specific API Gateway endpoint
-            const apiEndpoint = 'https://vdrmsynhhk.execute-api.us-east-1.amazonaws.com/prod/upload';
+        const file = fileInput.files[0];
+        const apiEndpoint = 'https://vdrmsynhhk.execute-api.us-east-1.amazonaws.com/prod/upload';
 
-            try {
-                const formData = new FormData();
-                formData.append('file', file);
+        try {
+            // Convert file to base64
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const base64File = reader.result.split(',')[1];
 
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    mode: 'cors', // Ensure CORS mode
-                    body: formData
-                });
+                const payload = {
+                    body: JSON.stringify({
+                        filename: file.name,
+                        contentType: file.type,
+                        file: base64File
+                    })
+                };
 
-                // Detailed logging
-                console.log('Response status:', response.status);
-                const responseBody = await response.text();
-                console.log('Response body:', responseBody);
+                try {
+                    const response = await fetch(apiEndpoint, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
 
-                if (response.ok) {
-                    uploadStatus.textContent = 'File uploaded successfully!';
-                    uploadStatus.style.color = 'green';
-                } else {
-                    uploadStatus.textContent = `Upload failed. Status: ${response.status}`;
+                    console.log('Response status:', response.status);
+                    const responseBody = await response.text();
+                    console.log('Response body:', responseBody);
+
+                    if (response.ok) {
+                        uploadStatus.textContent = 'File uploaded successfully!';
+                        uploadStatus.style.color = 'green';
+                    } else {
+                        uploadStatus.textContent = `Upload failed. Status: ${response.status}. ${responseBody}`;
+                        uploadStatus.style.color = 'red';
+                    }
+                } catch (fetchError) {
+                    console.error('Fetch error:', fetchError);
+                    uploadStatus.textContent = `Fetch error: ${fetchError.message}`;
                     uploadStatus.style.color = 'red';
                 }
-            } catch (error) {
-                console.error('Detailed upload error:', error);
-                uploadStatus.textContent = `Upload error: ${error.message}`;
-                uploadStatus.style.color = 'red';
-            }
-        });
+            };
+        } catch (error) {
+            console.error('Upload preparation error:', error);
+            uploadStatus.textContent = `Error: ${error.message}`;
+            uploadStatus.style.color = 'red';
+        }
     });
+});
     </script>
 </body>
 </html>
