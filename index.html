@@ -2,84 +2,145 @@
 <html>
 <head>
     <title>My GitHub Pages Website</title>
+    <style>
+        .container {
+            margin: 20px;
+            padding: 20px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .textbox {
+            width: 300px;
+            height: 100px;
+            margin-bottom: 10px;
+        }
+        #status, #uploadStatus {
+            margin-top: 10px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to My Website</h1>
-    <p>This is my new website hosted on GitHub Pages!</p>
-    
-    <form id="uploadForm">
-        <input type="file" id="fileUpload" name="fileUpload">
-        <input type="submit" value="Upload">
-    </form>
+    <div class="container">
+        <h1>Welcome to My Website</h1>
+        <p>This is my new website hosted on GitHub Pages!</p>
+        
+        <!-- Text Input Section -->
+        <div class="input-group">
+            <h2>Enter Your Text</h2>
+            <textarea id="userInput" class="textbox" placeholder="Enter your text here..."></textarea>
+            <br>
+            <button onclick="submitText()">Submit Text</button>
+            <div id="status"></div>
+        </div>
 
-    <div id="uploadStatus"></div>
+        <!-- File Upload Section -->
+        <div class="input-group">
+            <h2>Upload File</h2>
+            <form id="uploadForm">
+                <input type="file" id="fileUpload" name="fileUpload">
+                <input type="submit" value="Upload">
+            </form>
+            <div id="uploadStatus"></div>
+        </div>
+    </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('fileUpload');
-    const uploadStatus = document.getElementById('uploadStatus');
+        // Text submission function
+        async function submitText() {
+            const textInput = document.getElementById('userInput').value;
+            const statusDiv = document.getElementById('status');
+            
+            if (!textInput) {
+                statusDiv.innerHTML = 'Please enter some text';
+                return;
+            }
 
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
+            try {
+                statusDiv.innerHTML = 'Sending...';
+                const response = await fetch('YOUR_API_GATEWAY_ENDPOINT', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: textInput
+                    })
+                });
 
-        if (!fileInput.files.length) {
-            uploadStatus.textContent = 'Please select a file to upload.';
-            return;
+                if (response.ok) {
+                    statusDiv.innerHTML = 'Text submitted successfully!';
+                } else {
+                    statusDiv.innerHTML = 'Error submitting text';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.innerHTML = 'Error connecting to server';
+            }
         }
 
-        const file = fileInput.files[0];
-        const apiEndpoint = 'https://vdrmsynhhk.execute-api.us-east-1.amazonaws.com/prod/upload';
+        // File upload functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('fileUpload');
+            const uploadStatus = document.getElementById('uploadStatus');
 
-        try {
-            // Convert file to base64
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64File = reader.result.split(',')[1];
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
 
-                const payload = {
-                    body: JSON.stringify({
-                        filename: file.name,
-                        contentType: file.type,
-                        file: base64File
-                    })
-                };
+                if (!fileInput.files.length) {
+                    uploadStatus.textContent = 'Please select a file to upload.';
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                const apiEndpoint = 'https://vdrmsynhhk.execute-api.us-east-1.amazonaws.com/prod/upload';
 
                 try {
-                    const response = await fetch(apiEndpoint, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = async () => {
+                        const base64File = reader.result.split(',')[1];
 
-                    console.log('Response status:', response.status);
-                    const responseBody = await response.text();
-                    console.log('Response body:', responseBody);
+                        const payload = {
+                            body: JSON.stringify({
+                                filename: file.name,
+                                contentType: file.type,
+                                file: base64File
+                            })
+                        };
 
-                    if (response.ok) {
-                        uploadStatus.textContent = 'File uploaded successfully!';
-                        uploadStatus.style.color = 'green';
-                    } else {
-                        uploadStatus.textContent = `Upload failed. Status: ${response.status}. ${responseBody}`;
-                        uploadStatus.style.color = 'red';
-                    }
-                } catch (fetchError) {
-                    console.error('Fetch error:', fetchError);
-                    uploadStatus.textContent = `Fetch error: ${fetchError.message}`;
+                        try {
+                            const response = await fetch(apiEndpoint, {
+                                method: 'POST',
+                                mode: 'cors',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(payload)
+                            });
+
+                            if (response.ok) {
+                                uploadStatus.textContent = 'File uploaded successfully!';
+                                uploadStatus.style.color = 'green';
+                            } else {
+                                uploadStatus.textContent = 'Upload failed';
+                                uploadStatus.style.color = 'red';
+                            }
+                        } catch (fetchError) {
+                            console.error('Fetch error:', fetchError);
+                            uploadStatus.textContent = `Fetch error: ${fetchError.message}`;
+                            uploadStatus.style.color = 'red';
+                        }
+                    };
+                } catch (error) {
+                    console.error('Upload preparation error:', error);
+                    uploadStatus.textContent = `Error: ${error.message}`;
                     uploadStatus.style.color = 'red';
                 }
-            };
-        } catch (error) {
-            console.error('Upload preparation error:', error);
-            uploadStatus.textContent = `Error: ${error.message}`;
-            uploadStatus.style.color = 'red';
-        }
-    });
-});
+            });
+        });
     </script>
 </body>
 </html>
