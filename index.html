@@ -47,40 +47,56 @@
     </div>
 
     <script>
-    async function submitText() {
-    const textInput = document.getElementById('userInput').value;
-    const statusDiv = document.getElementById('status');
-    
-    if (!textInput) {
-        statusDiv.innerHTML = 'Please enter some text';
-        return;
-    }
-    
-    try {
-        statusDiv.innerHTML = 'Sending...';
-        const response = await fetch('https://hr5h2rtjl0.execute-api.us-east-1.amazonaws.com/prod', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': 'https://lim0070.github.io' // Explicitly set origin
-            },
-            body: JSON.stringify({
+    exports.handler = async (event) => {
+  // Dynamic CORS origin handling
+  const allowedOrigins = [
+    'https://lim0070.github.io',
+    'http://localhost:3000'  // For local testing
+  ];
+  
+  const origin = event.headers.origin || event.headers.Origin || '';
+  const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": corsOrigin,
+    "Access-Control-Allow-Headers": "Content-Type,Authorization,X-Api-Key",
+    "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
+    "Access-Control-Allow-Credentials": "true",
+    "Vary": "Origin"
+  };
+
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({ message: 'Successful preflight call' })
+    };
+  }
+
+  try {
+    // Your existing logic
+    return {
+      statusCode: 200,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        message: 'Success',
+        data: yourProcessedData
+      })
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: corsHeaders,
+      body: JSON.stringify({
+        message: 'Server Error',
+        error: error.message
+      })
+    };
+  }
+};
                 text: textInput
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        }
-
-        const result = await response.json();
-        statusDiv.innerHTML = 'Text submitted successfully!';
-    } catch (error) {
-        console.error('Detailed Error:', error);
-        statusDiv.innerHTML = `Error: ${error.message}`;
-    }
-}
+ 
 
         // File upload functionality
         document.addEventListener('DOMContentLoaded', () => {
