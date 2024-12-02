@@ -47,8 +47,7 @@
     </div>
 
     <script>
-       // Text submission function
-async function submitText() {
+    async function submitText() {
     const textInput = document.getElementById('userInput').value;
     const statusDiv = document.getElementById('status');
     
@@ -61,43 +60,25 @@ async function submitText() {
         statusDiv.innerHTML = 'Sending...';
         const response = await fetch('https://hr5h2rtjl0.execute-api.us-east-1.amazonaws.com/prod', {
             method: 'POST',
-            mode: 'cors', // Keep this
-            credentials: 'include', // Add this to support credentials if needed
             headers: {
                 'Content-Type': 'application/json',
-                // Optional: Add any additional headers if required by your backend
-                // 'X-Api-Key': 'your-api-key-if-applicable'
+                'Origin': 'https://lim0070.github.io' // Explicitly set origin
             },
             body: JSON.stringify({
                 text: textInput
             })
         });
 
-        // More detailed error handling
         if (!response.ok) {
-            // Try to get more detailed error message from response
-            const errorBody = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorBody}`);
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
         }
 
-        // Parse the successful response
         const result = await response.json();
         statusDiv.innerHTML = 'Text submitted successfully!';
-        
-        // Optionally, you can log or use the response data
-        console.log('Server response:', result);
-
     } catch (error) {
         console.error('Detailed Error:', error);
-        
-        // More informative error message
-        if (error.message.includes('Failed to fetch')) {
-            statusDiv.innerHTML = 'Network error: Unable to connect to the server';
-        } else if (error.message.includes('HTTP error')) {
-            statusDiv.innerHTML = `Submission failed: ${error.message}`;
-        } else {
-            statusDiv.innerHTML = 'Unexpected error occurred';
-        }
+        statusDiv.innerHTML = `Error: ${error.message}`;
     }
 }
 
