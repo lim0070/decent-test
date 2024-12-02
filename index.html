@@ -69,10 +69,16 @@
                 if (response.ok) {
                     status.textContent = 'Text submitted successfully!';
                     status.style.color = 'green';
+                    setTimeout(function() {
+                        status.style.display = 'none';
+                    }, 10000);
                 } else {
                     const errorData = await response.json();
                     status.textContent = `Submission failed: ${errorData.body ? JSON.parse(errorData.body).message : 'Unknown error'}`;
                     status.style.color = 'red';
+                    setTimeout(function() {
+                        status.style.display = 'none';
+                    }, 10000);
                 }
             } catch (error) {
                 console.error('Submission error:', error);
